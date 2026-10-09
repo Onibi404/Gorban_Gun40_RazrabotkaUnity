@@ -4,10 +4,6 @@ public class Battlefield : MonoBehaviour
 {
     public const int BoardSize = 8;
 
-    [Header("Префабы")]
-    [SerializeField] private Cell cellPrefab;
-    [SerializeField] private Unit unitPrefab;
-
     [Header("Материалы клеток")]
     [SerializeField] private Material lightMaterial;
     [SerializeField] private Material darkMaterial;
@@ -23,89 +19,157 @@ public class Battlefield : MonoBehaviour
     [SerializeField] private Material whiteKingMaterial;
     [SerializeField] private Material blackKingMaterial;
 
-    private readonly Cell[,] cells = new Cell[BoardSize, BoardSize];
-    private BattleController battleController;
+    private Cell[,] cells;
 
     public void Initialize(BattleController controller)
     {
-        battleController = controller;
-        CreateBoard();
-        CreateUnits();
+        CacheSceneCells(controller);
+        LinkSceneUnits(controller);
     }
 
-    private void CreateBoard()
+    private void CacheSceneCells(BattleController controller)
     {
-        for (int x = 0; x < BoardSize; x++)
+        cells = new Cell[BoardSize, BoardSize];
+
+        Cell[] sceneCells = GetComponentsInChildren<Cell>(true);
+
+        foreach (Cell cell in sceneCells)
         {
-            for (int y = 0; y < BoardSize; y++)
+            Vector3 localPosition =
+                transform.InverseTransformPoint(cell.transform.position);
+
+            int x = Mathf.RoundToInt(localPosition.x);
+            int y = Mathf.RoundToInt(localPosition.z);
+
+            if (!IsInside(x, y))
             {
-                CreateCell(x, y);
+                Debug.LogError(
+                    $"Battlefield: клетка {cell.name} находится вне поля 8x8.",
+                    cell);
+
+                continue;
             }
+
+            if (cells[x, y] != null)
+            {
+                Debug.LogError(
+                    $"Battlefield: в координатах [{x}, {y}] найдено две клетки.",
+                    cell);
+
+                continue;
+            }
+
+            Material baseMaterial =
+                IsDarkCell(x, y)
+                    ? darkMaterial
+                    : lightMaterial;
+
+            cell.Initialize(
+                x,
+                y,
+                controller,
+                baseMaterial,
+                hoverMaterial,
+                moveMaterial,
+                attackMaterial,
+                selectedMaterial,
+                pendingMaterial);
+
+            cell.ClearUnit();
+
+            cells[x, y] = cell;
+        }
+
+        if (sceneCells.Length != BoardSize * BoardSize)
+        {
+            Debug.LogError(
+                $"Battlefield: в сцене должно быть {BoardSize * BoardSize} клеток, " +
+                $"найдено {sceneCells.Length}.",
+                this);
         }
     }
 
-    private void CreateCell(int x, int y)
+    private void LinkSceneUnits(BattleController controller)
     {
-        Cell cell = Instantiate(cellPrefab, transform);
-        cell.transform.localPosition = new Vector3(x, 0f, y);
+        Unit[] sceneUnits =
+            GetComponentsInChildren<Unit>(true);
 
-        Material baseMaterial = IsDarkCell(x, y) ? darkMaterial : lightMaterial;
-        cell.Initialize(
-            x, y, battleController,
-            baseMaterial,
-            hoverMaterial,
-            moveMaterial,
-            attackMaterial,
-            selectedMaterial,
-            pendingMaterial);
-
-        cells[x, y] = cell;
-    }
-
-    private void CreateUnits()
-    {
-        for (int y = 0; y < 3; y++)
+        foreach (Unit unit in sceneUnits)
         {
-            for (int x = 0; x < BoardSize; x++)
+            Vector3 localPosition =
+                transform.InverseTransformPoint(unit.transform.position);
+
+            int x = Mathf.RoundToInt(localPosition.x);
+            int y = Mathf.RoundToInt(localPosition.z);
+
+            Cell cell = GetCell(x, y);
+
+            if (cell == null)
             {
-                if (IsDarkCell(x, y))
-                    SpawnUnit(PlayerTeam.White, cells[x, y]);
+                Debug.LogError(
+                    $"Battlefield: для шашки {unit.name} " +
+                    $"не найдена клетка [{x}, {y}].",
+                    unit);
+
+                continue;
             }
+
+            PlayerTeam team;
+
+            if (y <= 2)
+            {
+                team = PlayerTeam.White;
+            }
+            else if (y >= BoardSize - 3)
+            {
+                team = PlayerTeam.Black;
+            }
+            else
+            {
+                Debug.LogError(
+                    $"Battlefield: стартовая шашка {unit.name} " +
+                    $"находится в недопустимом ряду {y}.",
+                    unit);
+
+                continue;
+            }
+
+            unit.Initialize(
+                team,
+                cell,
+                controller,
+                whiteUnitMaterial,
+                blackUnitMaterial,
+                whiteKingMaterial,
+                blackKingMaterial);
+
+            cell.SetUnit(unit);
         }
 
-        for (int y = BoardSize - 3; y < BoardSize; y++)
+        if (sceneUnits.Length != 24)
         {
-            for (int x = 0; x < BoardSize; x++)
-            {
-                if (IsDarkCell(x, y))
-                    SpawnUnit(PlayerTeam.Black, cells[x, y]);
-            }
+            Debug.LogError(
+                $"Battlefield: в стартовой сцене должно быть 24 шашки, " +
+                $"найдено {sceneUnits.Length}.",
+                this);
         }
-    }
-
-    private void SpawnUnit(PlayerTeam team, Cell cell)
-    {
-        Unit unit = Instantiate(unitPrefab, transform);
-        unit.Initialize(
-            team,
-            cell,
-            battleController,
-            whiteUnitMaterial,
-            blackUnitMaterial,
-            whiteKingMaterial,
-            blackKingMaterial);
-        cell.SetUnit(unit);
     }
 
     public Cell GetCell(int x, int y)
     {
-        if (!IsInside(x, y)) return null;
+        if (cells == null || !IsInside(x, y))
+            return null;
+
         return cells[x, y];
     }
 
     public bool IsInside(int x, int y)
     {
-        return x >= 0 && x < BoardSize && y >= 0 && y < BoardSize;
+        return
+            x >= 0 &&
+            x < BoardSize &&
+            y >= 0 &&
+            y < BoardSize;
     }
 
     public bool IsDarkCell(int x, int y)
@@ -115,11 +179,14 @@ public class Battlefield : MonoBehaviour
 
     public void ClearHighlights()
     {
+        if (cells == null)
+            return;
+
         for (int x = 0; x < BoardSize; x++)
         {
             for (int y = 0; y < BoardSize; y++)
             {
-                cells[x, y].SetHighlight(CellHighlight.None);
+                cells[x, y]?.SetHighlight(CellHighlight.None);
             }
         }
     }

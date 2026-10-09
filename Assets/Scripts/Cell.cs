@@ -1,7 +1,12 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Cell : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+[RequireComponent(typeof(Renderer))]
+[RequireComponent(typeof(Collider))]
+public class Cell : MonoBehaviour,
+    IPointerEnterHandler,
+    IPointerExitHandler,
+    IPointerClickHandler
 {
     public int X { get; private set; }
     public int Y { get; private set; }
@@ -9,13 +14,17 @@ public class Cell : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IP
 
     private BattleController battleController;
     private Renderer cellRenderer;
+
     private Material baseMaterial;
     private Material hoverMaterial;
     private Material moveMaterial;
     private Material attackMaterial;
     private Material selectedMaterial;
     private Material pendingMaterial;
-    private CellHighlight highlight = CellHighlight.None;
+
+    private CellHighlight highlight =
+        CellHighlight.None;
+
     private bool isHovered;
 
     public void Initialize(
@@ -31,7 +40,9 @@ public class Cell : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IP
     {
         X = x;
         Y = y;
+
         battleController = controller;
+
         baseMaterial = baseMat;
         hoverMaterial = hoverMat;
         moveMaterial = moveMat;
@@ -39,8 +50,12 @@ public class Cell : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IP
         selectedMaterial = selectedMat;
         pendingMaterial = pendingMat;
 
-        cellRenderer = GetComponent<Renderer>();
-        gameObject.name = $"Клетка [{x}, {y}]";
+        cellRenderer =
+            GetComponent<Renderer>();
+
+        gameObject.name =
+            $"Клетка [{x}, {y}]";
+
         RefreshMaterial();
     }
 
@@ -54,7 +69,8 @@ public class Cell : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IP
         OccupiedUnit = null;
     }
 
-    public void SetHighlight(CellHighlight newHighlight)
+    public void SetHighlight(
+        CellHighlight newHighlight)
     {
         highlight = newHighlight;
         RefreshMaterial();
@@ -68,40 +84,67 @@ public class Cell : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IP
 
     private void RefreshMaterial()
     {
-        if (cellRenderer == null) return;
-
-        if (isHovered && highlight == CellHighlight.None)
+        if (
+            isHovered &&
+            highlight == CellHighlight.None)
         {
-            cellRenderer.material = hoverMaterial;
+            cellRenderer.material =
+                hoverMaterial;
+
             return;
         }
 
         switch (highlight)
         {
             case CellHighlight.Move:
-                cellRenderer.material = moveMaterial;
+                cellRenderer.material =
+                    moveMaterial;
                 break;
+
             case CellHighlight.Attack:
-                cellRenderer.material = attackMaterial;
+                cellRenderer.material =
+                    attackMaterial;
                 break;
+
             case CellHighlight.Selected:
-                cellRenderer.material = selectedMaterial;
+                cellRenderer.material =
+                    selectedMaterial;
                 break;
+
             case CellHighlight.Pending:
-                cellRenderer.material = pendingMaterial;
+                cellRenderer.material =
+                    pendingMaterial;
                 break;
+
             default:
-                cellRenderer.material = baseMaterial;
+                cellRenderer.material =
+                    baseMaterial;
                 break;
         }
     }
 
-    public void OnPointerEnter(PointerEventData eventData) => SetHover(true);
-    public void OnPointerExit(PointerEventData eventData) => SetHover(false);
-
-    public void OnPointerClick(PointerEventData eventData)
+    public void OnPointerEnter(
+        PointerEventData eventData)
     {
-        // Selection is handled centrally by BattleController from the mouse position.
-        // This method remains for the IPointerClickHandler requirement from the assignment.
+        SetHover(true);
+    }
+
+    public void OnPointerExit(
+        PointerEventData eventData)
+    {
+        SetHover(false);
+    }
+
+    public void OnPointerClick(
+        PointerEventData eventData)
+    {
+        if (
+            eventData.button !=
+            PointerEventData.InputButton.Left)
+        {
+            return;
+        }
+
+        battleController?.HandleCellSelected(this);
     }
 }

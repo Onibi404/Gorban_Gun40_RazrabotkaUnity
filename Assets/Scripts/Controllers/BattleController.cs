@@ -1,121 +1,185 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class BattleController : MonoBehaviour
 {
+    [Header("Игровые объекты")]
     [SerializeField] private Battlefield battlefield;
     [SerializeField] private PlayerController playerController;
 
-    private CheckersCommand checkersCommand;
-    private Camera mainCamera;
-    private Cell hoveredCell;
+    [Header("Интерфейс")]
+    [SerializeField] private BattleUI battleUI;
 
-    public PlayerTeam CurrentTeam => checkersCommand != null
-        ? checkersCommand.CurrentTeam
-        : PlayerTeam.White;
+    [Header("Перезапуск")]
+    [SerializeField] private float restartHoldDuration = 1.5f;
+
+    private CheckersCommand checkersCommand;
+    private GameInputActions inputActions;
+
+    private bool isRestartHolding;
+    private float restartHoldTime;
+
+    public PlayerTeam CurrentTeam =>
+        checkersCommand?.CurrentTeam
+        ?? PlayerTeam.White;
+
+    private void Awake()
+    {
+        inputActions =
+            new GameInputActions();
+    }
+
+    private void OnEnable()
+    {
+        inputActions.Gameplay.Confirm.performed +=
+            OnConfirmPerformed;
+
+        inputActions.Gameplay.Cancel.performed +=
+            OnCancelPerformed;
+
+        inputActions.Gameplay.Restart.started +=
+            OnRestartStarted;
+
+        inputActions.Gameplay.Restart.canceled +=
+            OnRestartCanceled;
+
+        inputActions.Gameplay.Enable();
+    }
 
     private void Start()
     {
-        mainCamera = Camera.main;
+        checkersCommand =
+            new CheckersCommand(
+                battlefield,
+                playerController);
 
-        if (battlefield == null || playerController == null)
-        {
-            Debug.LogError("BattleController: не назначена ссылка на Battlefield или PlayerController.");
-            enabled = false;
-            return;
-        }
+        checkersCommand.TurnChanged +=
+            OnTurnChanged;
 
-        if (mainCamera == null)
-        {
-            Debug.LogError("BattleController: главная камера не найдена. Камера должна иметь тег MainCamera.");
-            enabled = false;
-            return;
-        }
-
-        checkersCommand = new CheckersCommand(battlefield, playerController);
         battlefield.Initialize(this);
+
+        battleUI?.SetCurrentTeam(
+            checkersCommand.CurrentTeam);
     }
 
     private void Update()
     {
-        if (checkersCommand == null || playerController.IsBusy)
+        UpdateRestartProgress();
+    }
+
+    private void OnDisable()
+    {
+        inputActions.Gameplay.Confirm.performed -=
+            OnConfirmPerformed;
+
+        inputActions.Gameplay.Cancel.performed -=
+            OnCancelPerformed;
+
+        inputActions.Gameplay.Restart.started -=
+            OnRestartStarted;
+
+        inputActions.Gameplay.Restart.canceled -=
+            OnRestartCanceled;
+
+        inputActions.Gameplay.Disable();
+    }
+
+    private void OnDestroy()
+    {
+        if (checkersCommand != null)
+        {
+            checkersCommand.TurnChanged -=
+                OnTurnChanged;
+        }
+
+        inputActions?.Dispose();
+    }
+
+    private void OnConfirmPerformed(
+        InputAction.CallbackContext context)
+    {
+        checkersCommand?.Confirm();
+    }
+
+    private void OnCancelPerformed(
+        InputAction.CallbackContext context)
+    {
+        checkersCommand?.Cancel();
+    }
+
+    private void OnRestartStarted(
+        InputAction.CallbackContext context)
+    {
+        isRestartHolding = true;
+        restartHoldTime = 0f;
+
+        battleUI?.SetRestartProgress(0f);
+        battleUI?.ShowRestartProgress(true);
+    }
+
+    private void OnRestartCanceled(
+        InputAction.CallbackContext context)
+    {
+        CancelRestart();
+    }
+
+    private void UpdateRestartProgress()
+    {
+        if (!isRestartHolding)
             return;
 
-        UpdateHover();
+        restartHoldTime +=
+            Time.unscaledDeltaTime;
 
-        if (Input.GetMouseButtonDown(0))
-            HandleMouseClick();
+        float duration =
+            Mathf.Max(
+                0.1f,
+                restartHoldDuration);
 
-        if (Input.GetKeyDown(KeyCode.Escape))
-            checkersCommand.Cancel();
+        float progress =
+            restartHoldTime / duration;
 
-        if (Input.GetKeyDown(KeyCode.Space))
-            checkersCommand.Confirm();
+        battleUI?.SetRestartProgress(
+            progress);
+
+        if (progress >= 1f)
+        {
+            RestartScene();
+        }
     }
 
-    private void UpdateHover()
+    private void CancelRestart()
     {
-        Cell cellUnderMouse = GetCellUnderMouse();
+        isRestartHolding = false;
+        restartHoldTime = 0f;
 
-        if (cellUnderMouse == hoveredCell)
-            return;
-
-        if (hoveredCell != null)
-            hoveredCell.SetHover(false);
-
-        hoveredCell = cellUnderMouse;
-
-        if (hoveredCell != null)
-            hoveredCell.SetHover(true);
+        battleUI?.SetRestartProgress(0f);
+        battleUI?.ShowRestartProgress(false);
     }
 
-    private void HandleMouseClick()
+    private void RestartScene()
     {
-        Cell selectedCell = GetCellUnderMouse();
-        if (selectedCell != null)
-            HandleCellSelected(selectedCell);
-    }
+        isRestartHolding = false;
 
-    // Deliberately does not use Unity Physics.
-    // The mouse ray is intersected with the mathematical plane of the board,
-    // then the local X/Z position is converted to checkerboard coordinates.
-    private Cell GetCellUnderMouse()
-    {
-        if (mainCamera == null || battlefield == null)
-            return null;
+        Scene currentScene =
+            SceneManager.GetActiveScene();
 
-        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-        Plane boardPlane = new Plane(Vector3.up, battlefield.transform.position);
-
-        if (!boardPlane.Raycast(ray, out float enter))
-            return null;
-
-        Vector3 worldPoint = ray.GetPoint(enter);
-        Vector3 localPoint = battlefield.transform.InverseTransformPoint(worldPoint);
-
-        int x = Mathf.FloorToInt(localPoint.x + 0.5f);
-        int y = Mathf.FloorToInt(localPoint.z + 0.5f);
-
-        return battlefield.GetCell(x, y);
+        SceneManager.LoadScene(
+            currentScene.buildIndex);
     }
 
     public void HandleCellSelected(Cell cell)
     {
-        if (checkersCommand != null)
-            checkersCommand.Interact(cell);
+        if (playerController.IsBusy)
+            return;
+
+        checkersCommand?.Interact(cell);
     }
 
-    private void OnGUI()
+    private void OnTurnChanged(
+        PlayerTeam team)
     {
-        GUI.Box(new Rect(10, 10, 460, 142), "Шашки");
-        GUI.Label(new Rect(25, 38, 430, 20), $"Ход: {GetTeamName(CurrentTeam)}");
-        GUI.Label(new Rect(25, 60, 430, 20), "ЛКМ: выбрать шашку или клетку назначения");
-        GUI.Label(new Rect(25, 82, 430, 20), "Пробел: подтвердить ход    Esc: отменить");
-        GUI.Label(new Rect(25, 104, 430, 20), "Зелёный — ход, красный — взятие");
-        GUI.Label(new Rect(25, 124, 430, 20), "Синий — выбранная шашка, фиолетовый — выбранный ход");
-    }
-
-    private static string GetTeamName(PlayerTeam team)
-    {
-        return team == PlayerTeam.White ? "Белые" : "Чёрные";
+        battleUI?.SetCurrentTeam(team);
     }
 }

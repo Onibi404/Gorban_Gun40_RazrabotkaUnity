@@ -1,7 +1,12 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Unit : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+[RequireComponent(typeof(Renderer))]
+[RequireComponent(typeof(Collider))]
+public class Unit : MonoBehaviour,
+    IPointerEnterHandler,
+    IPointerExitHandler,
+    IPointerClickHandler
 {
     public PlayerTeam Team { get; private set; }
     public bool IsKing { get; private set; }
@@ -9,10 +14,16 @@ public class Unit : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IP
 
     private BattleController battleController;
     private Renderer unitRenderer;
+
     private Material whiteMaterial;
     private Material blackMaterial;
     private Material whiteKingMaterial;
     private Material blackKingMaterial;
+
+    private string TeamName =>
+        Team == PlayerTeam.White
+            ? "Белая"
+            : "Чёрная";
 
     public void Initialize(
         PlayerTeam team,
@@ -25,67 +36,102 @@ public class Unit : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IP
     {
         Team = team;
         CurrentCell = cell;
+
         battleController = controller;
+
         whiteMaterial = white;
         blackMaterial = black;
         whiteKingMaterial = whiteKing;
         blackKingMaterial = blackKing;
 
-        unitRenderer = GetComponent<Renderer>();
+        unitRenderer =
+            GetComponent<Renderer>();
+
         ApplyMaterial();
         SnapToCell();
-        gameObject.name = $"{GetTeamName(team)} шашка [{cell.X}, {cell.Y}]";
+        UpdateName();
     }
 
     public void SetCell(Cell cell)
     {
         CurrentCell = cell;
-        gameObject.name = $"{GetTeamName(Team)} {(IsKing ? "дамка" : "шашка")} [{cell.X}, {cell.Y}]";
+        UpdateName();
     }
 
     public void SnapToCell()
     {
-        if (CurrentCell == null) return;
-        transform.position = CurrentCell.transform.position + Vector3.up * 0.35f;
+        if (CurrentCell == null)
+            return;
+
+        transform.position =
+            CurrentCell.transform.position +
+            Vector3.up * 0.35f;
     }
 
     public void Promote()
     {
-        if (IsKing) return;
+        if (IsKing)
+            return;
+
         IsKing = true;
-        transform.localScale = new Vector3(0.72f, 0.28f, 0.72f);
+
+        transform.localScale =
+            new Vector3(
+                0.72f,
+                0.28f,
+                0.72f);
+
         ApplyMaterial();
-        gameObject.name = $"{GetTeamName(Team)} дамка [{CurrentCell.X}, {CurrentCell.Y}]";
+        UpdateName();
     }
 
     private void ApplyMaterial()
     {
-        if (unitRenderer == null) return;
-
-        if (Team == PlayerTeam.White)
-            unitRenderer.material = IsKing ? whiteKingMaterial : whiteMaterial;
-        else
-            unitRenderer.material = IsKing ? blackKingMaterial : blackMaterial;
+        unitRenderer.material =
+            Team == PlayerTeam.White
+                ? IsKing
+                    ? whiteKingMaterial
+                    : whiteMaterial
+                : IsKing
+                    ? blackKingMaterial
+                    : blackMaterial;
     }
 
-    public void OnPointerEnter(PointerEventData eventData)
+    private void UpdateName()
+    {
+        string unitType =
+            IsKing
+                ? "дамка"
+                : "шашка";
+
+        gameObject.name =
+            $"{TeamName} {unitType} " +
+            $"[{CurrentCell.X}, {CurrentCell.Y}]";
+    }
+
+    public void OnPointerEnter(
+        PointerEventData eventData)
     {
         CurrentCell?.SetHover(true);
     }
 
-    public void OnPointerExit(PointerEventData eventData)
+    public void OnPointerExit(
+        PointerEventData eventData)
     {
         CurrentCell?.SetHover(false);
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    public void OnPointerClick(
+        PointerEventData eventData)
     {
-        // Selection is handled centrally by BattleController from the mouse position.
-        // This method remains for the IPointerClickHandler requirement from the assignment.
-    }
+        if (
+            eventData.button !=
+            PointerEventData.InputButton.Left)
+        {
+            return;
+        }
 
-    private static string GetTeamName(PlayerTeam team)
-    {
-        return team == PlayerTeam.White ? "Белая" : "Чёрная";
+        battleController?.HandleCellSelected(
+            CurrentCell);
     }
 }

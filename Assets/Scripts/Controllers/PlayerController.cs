@@ -1,38 +1,57 @@
 using System;
-using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField, Min(0.05f)] private float moveDuration = 0.25f;
+    [Header("Анимация хода")]
+    [SerializeField, Min(0.05f)]
+    private float moveDuration = 0.25f;
+
+    [SerializeField]
+    private Ease moveEase = Ease.InOutSine;
+
+    private Tween moveTween;
 
     public bool IsBusy { get; private set; }
 
-    public void VisualizeMove(CheckersMove move, Action onComplete)
+    public void VisualizeMove(
+        CheckersMove move,
+        Action onComplete)
     {
-        if (!IsBusy)
-            StartCoroutine(MoveRoutine(move, onComplete));
-    }
+        if (IsBusy)
+            return;
 
-    private IEnumerator MoveRoutine(CheckersMove move, Action onComplete)
-    {
         IsBusy = true;
 
         Unit unit = move.Unit;
-        Vector3 start = unit.transform.position;
-        Vector3 end = move.To.transform.position + Vector3.up * 0.35f;
-        float elapsed = 0f;
 
-        while (elapsed < moveDuration)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / moveDuration);
-            unit.transform.position = Vector3.Lerp(start, end, t);
-            yield return null;
-        }
+        Vector3 targetPosition =
+            move.To.transform.position +
+            Vector3.up * 0.35f;
 
-        unit.transform.position = end;
+        moveTween?.Kill();
+
+        moveTween =
+            unit.transform
+                .DOMove(
+                    targetPosition,
+                    moveDuration)
+                .SetEase(moveEase)
+                .OnComplete(() =>
+                {
+                    IsBusy = false;
+                    moveTween = null;
+
+                    onComplete?.Invoke();
+                });
+    }
+
+    private void OnDisable()
+    {
+        moveTween?.Kill();
+        moveTween = null;
+
         IsBusy = false;
-        onComplete?.Invoke();
     }
 }
