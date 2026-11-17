@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eeccbf134e52f48b7b3d0ec2af19c581, type: 3}
+  m_Name: 04_GrenadeLauncher
+  m_EditorClassIdentifier: 
+  _weaponType: 3
+  _damage: 45
+  _fireRate: 1
+  _magazineSize: 1
+  _reserveMagazines: 8
+  _range: 60
+  _projectileSpeed: 22
+  _projectileDrop: 9.81
+  _spreadDegrees: 0
+  _pelletCount: 8
+  _explosionRadius: 5
+  _railPenetrations: 3
+  _meleeHalfAngle: 60
+  _chargeDuration: 0
+  _shotClip: {fileID: 8300000, guid: 06ada5590eba8d6489b36c6f3c54ff78, type: 3}
+  _emptyClip: {fileID: 0}
+  _reloadClip: {fileID: 0}
+  _projectilePrefab: {fileID: 8469744355508615852, guid: 9576e1f62802d498295cd87576360b70,
+    type: 3}
+  _impactEffectPrefab: {fileID: 6679928930618952270, guid: 4d85d6083bd05451a8643e5bef8b4558,
+    type: 3}

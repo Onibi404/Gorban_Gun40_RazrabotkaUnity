@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eeccbf134e52f48b7b3d0ec2af19c581, type: 3}
+  m_Name: 06_Melee
+  m_EditorClassIdentifier: 
+  _weaponType: 5
+  _damage: 25
+  _fireRate: 2
+  _magazineSize: 0
+  _reserveMagazines: 0
+  _range: 1.8
+  _projectileSpeed: 0
+  _projectileDrop: 0
+  _spreadDegrees: 0
+  _pelletCount: 8
+  _explosionRadius: 0
+  _railPenetrations: 1
+  _meleeHalfAngle: 60
+  _chargeDuration: 0
+  _shotClip: {fileID: 0}
+  _emptyClip: {fileID: 0}
+  _reloadClip: {fileID: 0}
+  _projectilePrefab: {fileID: 0}
+  _impactEffectPrefab: {fileID: 0}

@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eeccbf134e52f48b7b3d0ec2af19c581, type: 3}
+  m_Name: 03_Shotgun
+  m_EditorClassIdentifier: 
+  _weaponType: 2
+  _damage: 6
+  _fireRate: 1
+  _magazineSize: 6
+  _reserveMagazines: 4
+  _range: 25
+  _projectileSpeed: 1000
+  _projectileDrop: 0
+  _spreadDegrees: 12
+  _pelletCount: 10
+  _explosionRadius: 4
+  _railPenetrations: 3
+  _meleeHalfAngle: 60
+  _chargeDuration: 0
+  _shotClip: {fileID: 8300000, guid: 3061c7b9b32d894478e4126ccce25ca3, type: 3}
+  _emptyClip: {fileID: 0}
+  _reloadClip: {fileID: 0}
+  _projectilePrefab: {fileID: 0}
+  _impactEffectPrefab: {fileID: 7041918906314645388, guid: 361b8dc889e5a4ee2b0bbd426271d14e,
+    type: 3}

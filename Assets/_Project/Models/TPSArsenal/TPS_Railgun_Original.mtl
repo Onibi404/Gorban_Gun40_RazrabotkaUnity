@@ -1,0 +1,104 @@
+# Material palette for Unity importer; installer assigns URP materials.
+newmtl MAT_BLACK
+Ka 0.100 0.100 0.100
+Kd 0.060 0.080 0.105
+Ks 0.180 0.180 0.180
+Ns 60.0
+d 1.0
+illum 2
+
+newmtl MAT_DARK
+Ka 0.100 0.100 0.100
+Kd 0.140 0.180 0.220
+Ks 0.180 0.180 0.180
+Ns 60.0
+d 1.0
+illum 2
+
+newmtl MAT_STEEL
+Ka 0.100 0.100 0.100
+Kd 0.360 0.430 0.500
+Ks 0.180 0.180 0.180
+Ns 60.0
+d 1.0
+illum 2
+
+newmtl MAT_SILVER
+Ka 0.100 0.100 0.100
+Kd 0.660 0.710 0.760
+Ks 0.180 0.180 0.180
+Ns 60.0
+d 1.0
+illum 2
+
+newmtl MAT_RUBBER
+Ka 0.100 0.100 0.100
+Kd 0.035 0.040 0.050
+Ks 0.180 0.180 0.180
+Ns 60.0
+d 1.0
+illum 2
+
+newmtl MAT_OLIVE
+Ka 0.100 0.100 0.100
+Kd 0.200 0.270 0.180
+Ks 0.180 0.180 0.180
+Ns 60.0
+d 1.0
+illum 2
+
+newmtl MAT_GREEN
+Ka 0.100 0.100 0.100
+Kd 0.320 0.390 0.210
+Ks 0.180 0.180 0.180
+Ns 60.0
+d 1.0
+illum 2
+
+newmtl MAT_ORANGE
+Ka 0.100 0.100 0.100
+Kd 0.950 0.350 0.080
+Ks 0.180 0.180 0.180
+Ns 60.0
+d 1.0
+illum 2
+
+newmtl MAT_BRASS
+Ka 0.100 0.100 0.100
+Kd 0.660 0.430 0.160
+Ks 0.180 0.180 0.180
+Ns 60.0
+d 1.0
+illum 2
+
+newmtl MAT_CYAN
+Ka 0.100 0.100 0.100
+Kd 0.030 0.800 0.920
+Ks 0.180 0.180 0.180
+Ns 60.0
+d 1.0
+illum 2
+
+newmtl MAT_TEAL
+Ka 0.100 0.100 0.100
+Kd 0.060 0.330 0.370
+Ks 0.180 0.180 0.180
+Ns 60.0
+d 1.0
+illum 2
+
+newmtl MAT_RED
+Ka 0.100 0.100 0.100
+Kd 0.920 0.130 0.100
+Ks 0.180 0.180 0.180
+Ns 60.0
+d 1.0
+illum 2
+
+newmtl MAT_WHITE
+Ka 0.100 0.100 0.100
+Kd 0.850 0.860 0.750
+Ks 0.180 0.180 0.180
+Ns 60.0
+d 1.0
+illum 2
